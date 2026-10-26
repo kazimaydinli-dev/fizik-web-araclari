@@ -26,6 +26,27 @@ jobs:
           gradle-version: '8.9'
       - name: Build APK
         run: gradle -p YuzerMikrofon assembleDebug --no-daemon
+      - name: Verify APK signature and Android manifest
+        run: |
+          APK=YuzerMikrofon/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK"
+      - name: Enable KVM for emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install APK on Android 14 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            adb install -r YuzerMikrofon/app/build/outputs/apk/debug/app-debug.apk
+            adb shell pm list packages | grep 'tr.yerel.yuzermikrofon'
       - uses: actions/upload-artifact@v4
         with:
           name: YuzerMikrofon-debug-apk
