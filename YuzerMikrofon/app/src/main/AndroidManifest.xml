@@ -3,8 +3,8 @@
  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
  <queries><intent><action android:name="android.speech.RecognitionService"/></intent></queries>
  <application android:label="Yüzer Mikrofon" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
-  <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
-  <service android:name=".FloatingMicService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true" android:label="Yüzer Mikrofon">
+  <activity android:name="tr.yerel.yuzermikrofon.MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+  <service android:name="tr.yerel.yuzermikrofon.FloatingMicService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true" android:label="Yüzer Mikrofon">
    <intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter>
    <meta-data android:name="android.accessibilityservice" android:resource="@xml/mic_accessibility"/>
   </service>
