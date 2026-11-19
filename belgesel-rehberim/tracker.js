@@ -22,10 +22,10 @@ const $=id=>document.getElementById(id);
 let visible=false;
 function draw(){
 const q=$("film-search").value.toLocaleLowerCase("tr-TR").trim(),f=$("film-filter").value;
-const all=[...custom,...catalog],tracked=all.filter(x=>["todo","watched"].includes(status[x.id]));
+const all=[...custom.filter(x=>x.type!=="Film"&&x.type!=="Dizi"),...catalog],tracked=all.filter(x=>["todo","watched"].includes(status[x.id]));
 const entries=tracked.filter(x=>(f==="all"||status[x.id]===f)&&(!q||(x.title+" "+x.source).toLocaleLowerCase("tr-TR").includes(q)));
 $("film-count").textContent=tracked.length+" takip kaydı · "+tracked.filter(x=>status[x.id]==="watched").length+" izlendi · "+tracked.filter(x=>status[x.id]==="todo").length+" izlenmedi";
-$("film-rows").innerHTML=entries.map(x=>'<div class="film-row"><strong>'+esc(x.title)+'</strong><small>'+esc(x.type||"Belgesel")+' · '+esc(x.source)+'</small><nav><button data-id="'+esc(x.id)+'" data-state="todo" class="'+(status[x.id]==="todo"?"on":"")+'">○ İzlemedim</button><button data-id="'+esc(x.id)+'" data-state="watched" class="'+(status[x.id]==="watched"?"on":"")+'">✓ İzledim</button>'+(x.custom?'<button data-remove="'+esc(x.id)+'">Sil</button>':'')+'<a target="_blank" rel="noopener noreferrer" href="'+esc(x.url)+'">▶ İzle</a></nav></div>').join("")||'<div class="film-empty">Henüz bu filtrede kayıt yok. Keşfet ekranında bir filmi işaretle veya bağlantı ekle.</div>';
+$("film-rows").innerHTML=entries.map(x=>'<div class="film-row"><strong>'+esc(x.title)+'</strong><small>'+esc(x.type||"Belgesel")+' · '+esc(x.source)+'</small><nav><button data-id="'+esc(x.id)+'" data-state="todo" class="'+(status[x.id]==="todo"?"on":"")+'">○ İzlemedim</button><button data-id="'+esc(x.id)+'" data-state="watched" class="'+(status[x.id]==="watched"?"on":"")+'">✓ İzledim</button>'+(x.custom?'<button data-remove="'+esc(x.id)+'">Sil</button>':'')+'<a target="_blank" rel="noopener noreferrer" href="'+esc(x.url)+'">▶ İzle</a></nav></div>').join("")||'<div class="film-empty">Henüz bu filtrede kayıt yok. Keşfet ekranında bir belgeseli işaretle veya bağlantı ekle.</div>';
 }
 function close(){visible=false;panel.classList.remove("show");panel.setAttribute("aria-hidden","true");document.body.style.overflow=""}
 toggle.addEventListener("click",()=>{visible=true;panel.classList.add("show");panel.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";draw();$("film-close").focus()});
