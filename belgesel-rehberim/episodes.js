@@ -32,30 +32,20 @@ css.textContent=".eps-open{border:1px solid #c7e3d9;background:#e9f6ef;color:#17
 document.head.appendChild(css);
 var modal=create("div","eps-shade");
 modal.setAttribute("aria-hidden","true");
-modal.innerHTML='<div class="eps-panel" role="dialog" aria-modal="true" aria-label="Belgesel bölüm listesi"><div class="eps-head"><div class="eps-header-row"><h2 id="eps-name">Bölümler</h2><button class="eps-close" id="eps-close" type="button">✕</button></div><div id="eps-status" class="eps-status"></div><div class="eps-bar"><span id="eps-bar-fill"></span></div></div><div class="eps-filters" id="eps-filters"></div><div class="eps-list" id="eps-list"></div><details class="eps-add" id="eps-add"><summary>➕ Yeni bölüm veya doğrudan bölüm bağlantısı ekle</summary><form id="eps-add-form"><input type="number" id="eps-season" min="1" max="10000" value="1" required placeholder="Sezon"><input type="number" id="eps-number" min="1" max="10000" value="1" required placeholder="Bölüm"><input type="text" id="eps-title" class="full" maxlength="180" placeholder="Bölüm adı (isteğe bağlı)"><input type="url" id="eps-url" class="full" placeholder="https://... doğrudan bölüm adresi (isteğe bağlı)"><button class="full" type="submit">Bölümü kaydet</button></form></details></div>';
+modal.innerHTML='<div class="eps-panel" role="dialog" aria-modal="true" aria-label="Belgesel bölüm listesi"><div class="eps-head"><div class="eps-header-row"><h2 id="eps-name">Bölümler</h2><button class="eps-close" id="eps-close" type="button">✕</button></div><div id="eps-status" class="eps-status"></div><div class="eps-bar"><span id="eps-bar-fill"></span></div></div><div class="eps-filters" id="eps-filters"></div><div class="eps-list" id="eps-list"></div><div class="eps-add" id="eps-source-help"><small>Bağlantısı bulunmayan bölümlerde <b>Sitede bölüm seç</b> düğmesini kullanın. Kaynak site ayrı bir bölüm adresi sunarsa sonraki katalog güncellemesinde doğrudan bağlantı eklenebilir. Sizden bağlantı bulmanız istenmez.</small></div></div>';
 document.body.append(modal);
 var active=null,filter="all",seasonScope="all";
 function close(){active=null;modal.classList.remove("show");modal.setAttribute("aria-hidden","true");document.body.style.overflow="";decorate()}
 function open(item){
 active={key:seriesKey(item),item:item};filter="all";seasonScope="all";
 document.getElementById("eps-name").textContent=item.title+" — Bölümler";
-document.getElementById("eps-add").open=false;
+
 modal.classList.add("show");modal.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
 draw();document.getElementById("eps-close").focus()
 }
 modal.addEventListener("click",function(e){if(e.target===modal)close()});
 document.getElementById("eps-close").addEventListener("click",close);
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&active)close()});
-function editURL(ep){
-if(!active)return;var id=epID(active.key,ep),current=userLinks[id]||(ep.d?ep.u:"")||"";
-var answer=prompt("S"+ep.s+" B"+ep.n+" için doğrudan bölüm adresi yazın.\nBoş bırakmak kişisel bağlantıyı kaldırır.",current);
-if(answer===null)return;
-answer=answer.trim();
-if(!answer){delete userLinks[id];store();draw();decorate();return}
-var safe=safeURL(answer);
-if(!safe){alert("Lütfen http:// veya https:// ile başlayan geçerli bir web adresi girin.");return}
-userLinks[id]=safe;store();draw();decorate();
-}
 function draw(){
 if(!active)return;
 var a=entries(active.key),p=progress(active.key);
@@ -67,9 +57,9 @@ choices.forEach(function(ch){var b=create("button",filter===ch[0]?"sel":"",ch[1]
 var seasons=[...new Set(a.map(function(ep){return ep.s}))].sort(function(x,y){return x-y});
 if(seasons.length>1){var select=create("select");select.setAttribute("aria-label","Sezon seçimi");[["all","Tüm sezonlar"]].concat(seasons.map(function(s){return [String(s),s===40?"Özel (40)":"Sezon "+s]})).forEach(function(opt){var o=create("option","",opt[1]);o.value=opt[0];select.append(o)});select.value=seasonScope;select.addEventListener("change",function(){seasonScope=select.value;draw()});controls.append(select)}
 var list=document.getElementById("eps-list"),scroll=list.scrollTop;list.replaceChildren();
-list.append(create("div","eps-info","▶ Bölümü aç: doğrudan ilgili bölümün adresi. ↗ Sitede seç: kaynak site tek sayfada oynatıyor; ilgili bölümü orada seçmelisiniz. Her bölüme özel bağlantıyı 🔗 simgesiyle ekleyebilirsiniz. İzleme işaretleri cihazınızda saklanır."));
+list.append(create("div","eps-info","Bölümün ayrı sayfası varsa ▶ Bölümü aç doğrudan oraya götürür. Kaynak site bütün bölümleri tek sayfada gösteriyorsa ↗ Sitede bölüm seç ile açıp bölümü oradan seçebilirsiniz. İzledim işaretleri her bölüm için ayrı saklanır."));
 var selected=a.filter(function(ep){if(seasonScope!=="all"&&ep.s!==Number(seasonScope))return false;if(filter==="direct")return !!directLink(active.key,ep);if(filter==="done")return marks[epID(active.key,ep)]===true;if(filter==="todo")return marks[epID(active.key,ep)]!==true;return true});
-if(!selected.length){list.append(create("div","eps-empty",a.length?"Bu filtre için bölüm bulunamadı.":"Bu belgesel için henüz bölüm kaydı yok. Aşağıdaki bölüm ekleme alanını kullanabilirsiniz."));return}
+if(!selected.length){list.append(create("div","eps-empty",a.length?"Bu filtre için bölüm bulunamadı.":"Bu belgeselin bölümleri henüz kataloglanmadı. Kaynak siteden seçebilirsiniz."));if(!a.length){var sourceLink=create("a","eps-link","↗ Belgeselin bölümlerini sitede aç");sourceLink.href=safeURL(active.item.url)||"#";sourceLink.target="_blank";sourceLink.rel="noopener noreferrer";list.append(sourceLink)}return}
 var lastSeason=null;
 selected.forEach(function(ep){
 if(ep.s!==lastSeason){lastSeason=ep.s;list.append(create("div","eps-group",ep.s===40?"Özel bölümler":ep.s+". Sezon"))}
@@ -83,27 +73,11 @@ var sourceText=url?"S"+ep.s+" · B"+ep.n+" · Doğrudan bağlantı":ep.av===fals
 mid.append(create("small","",sourceText));
 var buttons=create("div","eps-actions");
 var target=url||safeURL(ep.u)||safeURL(active.item.url);
-if(target){var link=create("a","eps-link"+(url?"":" fallback"),url?"▶ Bölümü aç":ep.av===false?"↗ Seri sayfası":"↗ Sitede seç");link.href=target;link.target="_blank";link.rel="noopener noreferrer";link.setAttribute("aria-label","S"+ep.s+" B"+ep.n+" "+(url?"bölüm bağlantısı":"belgesel sayfası"));buttons.append(link)}
-var edit=create("button","eps-edit",url?"🔗 Linki düzenle":"🔗 Link ekle");edit.type="button";edit.addEventListener("click",function(){editURL(ep)});buttons.append(edit);
-if(ep.custom){var del=create("button","eps-delete","Sil");del.type="button";del.addEventListener("click",function(){if(!confirm("Bu eklediğiniz bölüm silinsin mi?"))return;userEpisodes[active.key]=(userEpisodes[active.key]||[]).filter(function(x){return x.k!==ep.k});delete marks[id];delete userLinks[id];store();draw();decorate()});buttons.append(del)}
+if(target){var link=create("a","eps-link"+(url?"":" fallback"),url?"▶ Bölümü aç":ep.av===false?"↗ Kaynak sayfa":"↗ Sitede bölüm seç");link.href=target;link.target="_blank";link.rel="noopener noreferrer";link.setAttribute("aria-label","S"+ep.s+" B"+ep.n+" "+(url?"bölüm bağlantısı":"belgesel sayfası"));buttons.append(link)}
 mid.append(buttons);row.append(tick,mid);list.append(row)
 });
 list.scrollTop=scroll;
 }
-document.getElementById("eps-add-form").addEventListener("submit",function(event){
-event.preventDefault();if(!active)return;
-var s=Number(document.getElementById("eps-season").value),n=Number(document.getElementById("eps-number").value);
-if(!Number.isInteger(s)||s<1||!Number.isInteger(n)||n<1)return;
-var title=document.getElementById("eps-title").value.trim()||"Bölüm "+n;
-var raw=document.getElementById("eps-url").value.trim(),url=raw?safeURL(raw):null;
-if(raw&&!url){alert("Geçerli bir bölüm bağlantısı girin.");return}
-var k=s+"-"+n,id=active.key+":"+k,existing=entries(active.key).find(function(ep){return ep.k===k});
-if(!existing){userEpisodes[active.key]??=[];userEpisodes[active.key].push({s:s,n:n,k:k,t:title,custom:true})}
-if(url)userLinks[id]=url;
-store();document.getElementById("eps-add-form").reset();
-document.getElementById("eps-add").open=false;filter="all";seasonScope="all";draw();decorate();
-if(existing&&!url)alert("Bölüm zaten listede var. Yeni bağlantı girerek linkini güncelleyebilirsiniz.")
-});
 function decorate(){
 document.querySelectorAll("#cards article.card").forEach(function(card){
 var heart=card.querySelector("button.heart[data-id]");
@@ -114,9 +88,9 @@ var isSeries=!!DATA[key]||String(item.url||"").includes("/belgeseldizi/")||(user
 if(!isSeries)return;
 var area=card.querySelector(".acts");if(!area)return;
 var btn=area.querySelector(".eps-open");if(!btn){btn=create("button","eps-open");btn.type="button";btn.addEventListener("click",function(){open(item)});area.append(btn)}
-var p=progress(key);btn.textContent=p.total?"☷ Bölümler ("+p.total+")":"➕ Bölüm ekle";
+var p=progress(key);btn.textContent=p.total?"☷ Bölümler ("+p.total+")":"☷ Bölümler";
 var info=card.querySelector(".eps-count");if(!info){info=create("div","eps-count");area.insertAdjacentElement("afterend",info)}
-info.textContent=p.total?p.done+" / "+p.total+" izlendi · "+p.direct+" doğrudan link":"Bölüm listesi oluşturulabilir";
+info.textContent=p.total?p.done+" / "+p.total+" izlendi · "+p.direct+" doğrudan link":"Bölümler için kaynak sayfa açılır";
 })
 }
 var target=document.getElementById("cards");if(target){new MutationObserver(decorate).observe(target,{childList:true});decorate()}
